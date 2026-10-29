@@ -67,6 +67,53 @@ class Meetup extends Model implements Htmlable
 		return $this->ends_at->lte($at ?? now());
 	}
 	
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function toDuplicateAttributes(): array
+	{
+		[$starts_at, $ends_at] = $this->duplicateDates();
+		
+		return [
+			'group_id' => $this->group_id,
+			'location' => $this->location,
+			'capacity' => $this->capacity,
+			'description' => $this->description,
+			'external_rsvp_url' => $this->external_rsvp_url,
+			'custom_open_graph_image' => $this->custom_open_graph_image,
+			'starts_at' => $starts_at,
+			'ends_at' => $ends_at,
+		];
+	}
+	
+	/**
+	 * Keeps this meetup's local time-of-day and duration, but moves it to one month
+	 * after the group's latest meetup (past or future), whichever meetup is being duplicated.
+	 *
+	 * @return array{0: CarbonInterface, 1: CarbonInterface}
+	 */
+	protected function duplicateDates(): array
+	{
+		$app_timezone = config('app.timezone');
+		$group_timezone = $this->group?->timezone ?? $app_timezone;
+		
+		$latest_meetup = static::query()
+			->where('group_id', $this->group_id)
+			->latest('starts_at')
+			->first() ?? $this;
+		
+		$target_date = $latest_meetup->starts_at->avoidMutation()->timezone($group_timezone)->addMonthNoOverflow();
+		
+		$starts_at = $this->starts_at->avoidMutation()
+			->timezone($group_timezone)
+			->setDate($target_date->year, $target_date->month, $target_date->day)
+			->timezone($app_timezone);
+		
+		$ends_at = $starts_at->avoidMutation()->addSeconds((int) $this->starts_at->diffInSeconds($this->ends_at));
+		
+		return [$starts_at, $ends_at];
+	}
+	
 	public function group(): BelongsTo
 	{
 		return $this->belongsTo(Group::class);
