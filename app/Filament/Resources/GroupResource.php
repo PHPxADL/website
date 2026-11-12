@@ -16,11 +16,14 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Js;
+use Livewire\Component as Livewire;
 
 class GroupResource extends Resource
 {
@@ -153,6 +156,22 @@ class GroupResource extends Resource
 						->default(DomainStatus::Pending)
 						->disabled(fn() => ! Auth::user()->isSuperAdmin())
 						->dehydrated(fn() => ! Auth::user()->isSuperAdmin()),
+				]),
+				Section::make('Calendar')->collapsible()->visibleOn('edit')->schema([
+					Forms\Components\TextInput::make('calendar_url')
+						->label('Calendar feed (.ics)')
+						->helperText('Subscribe to this URL from Google Calendar, Apple Calendar, Outlook, etc.')
+						->readOnly()
+						->dehydrated(false)
+						->suffixAction(
+							Action::make('copyCalendarUrl')
+								->label('Copy')
+								->icon('heroicon-m-clipboard-document')
+								->action(function(Livewire $livewire, ?string $state) {
+									$livewire->js('window.navigator.clipboard.writeText('.Js::from($state).')');
+									Notification::make()->title('Calendar URL copied')->success()->send();
+								})
+						),
 				]),
 				Section::make('Location')->collapsible()->collapsed()->columns(3)->schema([
 					Forms\Components\Select::make('continent')

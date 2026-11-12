@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\RootDomains;
+use App\Http\Controllers\GroupCalendarController;
 use App\Http\Controllers\World\HomeController;
 use App\Http\Middleware\SetGroupFromDomainMiddleware;
 use App\Http\Middleware\ShareNextMeetupMiddleware;
@@ -22,6 +23,7 @@ Route::middleware([SetGroupFromDomainMiddleware::class, ShareNextMeetupMiddlewar
 		Route::view('/', 'welcome');
 		Route::view('/join', 'join');
 		Route::view('/terms', 'world.terms');
+		Route::get('calendar.ics', GroupCalendarController::class)->name('group.calendar');
 		
 		Route::get('meetups/{meetup}/rsvps', function(Meetup $meetup) {
 			return view('rsvp', ['meetup' => $meetup]);

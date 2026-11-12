@@ -147,6 +147,11 @@ class Group extends Model
 		return Attribute::get(fn() => $this->region ?? str($this->name)->afterLast('×')->trim()->toString());
 	}
 	
+	protected function calendarUrl(): Attribute
+	{
+		return Attribute::get(fn(): string => $this->url('calendar.ics'));
+	}
+	
 	protected function airportCode(): Attribute
 	{
 		return Attribute::get(

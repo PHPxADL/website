@@ -23,6 +23,8 @@ class EditGroup extends EditRecord
 		/** @var \App\Models\Group $record */
 		$record = $this->getRecord();
 		
+		$data['calendar_url'] = $record->calendar_url;
+		
 		try {
 			$data['email'] = $record->email;
 			
